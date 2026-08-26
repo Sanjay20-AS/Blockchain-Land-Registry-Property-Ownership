@@ -1,260 +1,601 @@
 # Blockchain-Based Land Registry & Property Ownership System
 
-> Educational blockchain prototype built with Solidity and Hardhat. Uses **synthetic property data and local/test wallets only**. It does **not** create or prove legally valid property ownership.
+> An educational blockchain prototype for registering properties, verifying records, transferring ownership, and maintaining an auditable ownership history using Solidity, Hardhat, React, and Ethers.js.
 
-## Overview
-This project demonstrates how a tamper-evident digital registry can record property registration, authority verification, ownership transfers, document hashes, roles, timestamps, and ownership history on an EVM-compatible blockchain.
+**Educational project only:** This system uses synthetic property data and local/test wallets. It does **not** create, prove, or transfer legally valid property ownership.
 
-## Problem Statement
-Traditional property records can be fragmented across offices, difficult to reconcile, vulnerable to unauthorized modification, and slow to verify. A blockchain can provide a shared audit trail where each accepted state change is cryptographically linked to a transaction.
+---
 
-## Objectives
-- Register synthetic properties through an authorized registrar.
-- Verify records through an authorized verifier/surveyor.
-- Link current ownership to wallet addresses.
-- Transfer ownership with validation and events.
-- Preserve historical ownership records.
-- Demonstrate document integrity through hashes.
-- Test security controls automatically.
+## 📌 Overview
 
-## Industry Relevance
-The architecture is relevant to land registries, property-management systems, real-estate technology, title verification, due diligence, housing societies, mortgage/lien workflows, and document provenance. Production systems would require government authority, identity verification, cadastral databases, legal procedures, dispute resolution, and registrar integration.
+The **Blockchain-Based Land Registry & Property Ownership System** demonstrates how blockchain technology can be used to create a tamper-evident digital property registry.
 
-## Educational Disclaimer
-Blockchain records are only as trustworthy as the information and authority that enters them. This project does not establish legal title, replace a registrar, or represent real government land records. It follows a **garbage-in, garbage-out** model: an immutable record of incorrect input is still incorrect.
+The system records:
 
-## Technology Stack
-- Solidity 0.8.20
-- Hardhat 2.x
-- Ethers.js 6 through Hardhat Toolbox / frontend
-- React + Vite frontend
-- MetaMask for wallet interaction
-- Local Hardhat network / Remix VM
-- SHA-256 for sample document integrity demonstration
+* Property registration
+* Authority verification
+* Current and previous ownership
+* Ownership transfers
+* Document hashes
+* Registration and transfer timestamps
+* Role-based permissions
+* Ownership history
+* Smart-contract events
 
-## Actors
-| Actor | Responsibility |
-|---|---|
-| Admin | Bootstrap contract and assign roles |
-| Registrar | Register new property records |
-| Surveyor / Verifier | Verify property records |
-| Notary | Complete multi-step transfer; administer future production workflows |
-| Property Owner | Own and transfer a verified property |
-| Buyer | Receive ownership in a test wallet |
+The project runs on a local EVM blockchain using Hardhat and provides a React-based frontend for interacting with the smart contract through MetaMask.
 
-## Architecture
+---
+
+## 🎯 Problem Statement
+
+Traditional property records may be distributed across multiple offices and databases, making them difficult to reconcile and verify. Manual processes can also introduce delays and create opportunities for unauthorized modification.
+
+Blockchain provides a shared, append-only audit trail where accepted state changes are cryptographically linked to transactions.
+
+This project explores how that concept can be applied to a simplified land-registry workflow.
+
+---
+
+## ✨ Objectives
+
+* Register synthetic property records through an authorized registrar.
+* Verify property records through authorized authorities.
+* Associate property ownership with blockchain wallet addresses.
+* Transfer ownership with authorization and validation.
+* Maintain historical ownership records.
+* Demonstrate document integrity using cryptographic hashes.
+* Enforce role-based access control.
+* Prevent unauthorized property modifications.
+* Test smart-contract security controls automatically.
+
+---
+
+## 🏗️ System Architecture
+
 ```text
-Authority / Registrar
-        |
-        v
-+-----------------------+
-| LandRegistry.sol      |
-| - Property registry   |
-| - Role control        |
-| - Verification        |
-| - Transfer logic      |
-| - Ownership history   |
-| - Events              |
-+-----------+-----------+
-            |
-            v
-       EVM Blockchain
-            ^
-            |
-   React + Ethers.js
-            |
-         MetaMask
+                 Authority / Registrar
+                         |
+                         v
+              +-----------------------+
+              |    LandRegistry.sol   |
+              |-----------------------|
+              | Property Registry     |
+              | Role Management        |
+              | Verification           |
+              | Transfer Logic         |
+              | Ownership History      |
+              | Document Hashes        |
+              | Events                 |
+              +-----------+-----------+
+                          |
+                          v
+                   EVM Blockchain
+                          ^
+                          |
+                    Ethers.js
+                          ^
+                          |
+                   React Frontend
+                          ^
+                          |
+                       MetaMask
 
-Off-chain: sample documents / IPFS-ready URIs
-On-chain: IDs, owner wallets, status, document hashes, timestamps, events
+       Off-chain                    On-chain
+       ---------                    --------
+       Documents                   Property IDs
+       JSON files                  Owner addresses
+       IPFS-ready files            Status
+                                   Document hashes
+                                   Timestamps
+                                   Events
 ```
 
-## Property Data Model
-`Property` contains property ID, property number, location, area, type, current owner, previous owner, document hash, verification state, status, registration timestamp, transfer timestamp, existence flag.
+---
 
-Statuses: `REGISTERED`, `VERIFIED`, `TRANSFER_PENDING`, `TRANSFERRED`, `DISPUTED`.
+## 🛠️ Technology Stack
 
-## Main Workflows
-### Registration
-Registrar validates uniqueness, owner address, area, required strings and document hash, then stores the property and emits `PropertyRegistered`.
+| Technology          | Purpose                                   |
+| ------------------- | ----------------------------------------- |
+| **Solidity 0.8.20** | Smart-contract development                |
+| **Hardhat 2.x**     | Local blockchain, compilation and testing |
+| **Ethers.js 6**     | Blockchain interaction                    |
+| **React + Vite**    | Frontend application                      |
+| **MetaMask**        | Wallet and transaction signing            |
+| **Node.js**         | Development environment                   |
+| **SHA-256**         | Sample document integrity verification    |
+| **Remix IDE**       | Optional smart-contract simulation        |
 
-### Verification
-An authorized verifier changes `verified` to true and status to `VERIFIED`. Registration and verification are deliberately separate so a newly entered record is not automatically treated as approved.
+---
 
-### Ownership Transfer
-Two flows are available:
-1. `transferOwnership()` — simple classroom flow: current owner transfers a verified property.
-2. `requestTransfer()` + `completeTransfer()` — multi-step industry-oriented flow: owner requests, notary completes.
+## 👥 System Actors
 
-Every successful transfer updates current/previous owner, timestamp, document/deed hash, status, history, and emits `OwnershipTransferred`.
+| Actor                   | Responsibility                                |
+| ----------------------- | --------------------------------------------- |
+| **Admin**               | Deploys the contract and manages roles        |
+| **Registrar**           | Registers new property records                |
+| **Surveyor / Verifier** | Verifies registered properties                |
+| **Notary**              | Authorizes completion of multi-step transfers |
+| **Property Owner**      | Owns and transfers verified properties        |
+| **Buyer**               | Receives ownership using a test wallet        |
 
-## Document Hash Verification
-`sample_documents/property_001.json` contains synthetic property information. Generate its SHA-256 hash with:
+---
+
+## 🧱 Property Data Model
+
+Each property record contains information such as:
+
+* Property ID
+* Property number
+* Location
+* Area
+* Property type
+* Current owner
+* Previous owner
+* Document hash
+* Verification state
+* Property status
+* Registration timestamp
+* Transfer timestamp
+* Existence flag
+
+### Property Statuses
+
+```text
+REGISTERED
+VERIFIED
+TRANSFER_PENDING
+TRANSFERRED
+DISPUTED
+```
+
+---
+
+## 🔄 Main Workflows
+
+### 1. Property Registration
+
+An authorized registrar creates a property record.
+
+The contract validates:
+
+* Property ID uniqueness
+* Owner address
+* Positive property area
+* Required property information
+* Document hash
+
+A `PropertyRegistered` event is emitted after successful registration.
+
+---
+
+### 2. Property Verification
+
+An authorized verifier verifies a registered property.
+
+The verification process is intentionally separate from registration. A newly registered property is **not automatically considered verified**.
+
+After successful verification:
+
+```text
+REGISTERED → VERIFIED
+```
+
+---
+
+### 3. Ownership Transfer
+
+The system supports two ownership-transfer approaches.
+
+#### Simple Transfer
+
+```text
+transferOwnership()
+```
+
+The current owner can directly transfer a verified property to another wallet.
+
+#### Multi-Step Transfer
+
+```text
+requestTransfer()
+        ↓
+TRANSFER_PENDING
+        ↓
+completeTransfer()
+        ↓
+TRANSFERRED
+```
+
+The multi-step workflow introduces a notary role for completing the transfer.
+
+After a successful transfer, the contract updates:
+
+* Current owner
+* Previous owner
+* Transfer timestamp
+* Property status
+* Ownership history
+* Document/deed hash
+
+An `OwnershipTransferred` event is also emitted.
+
+---
+
+## 🔐 Document Hash Verification
+
+The project includes a synthetic property document:
+
+```text
+sample_documents/property_001.json
+```
+
+Generate its SHA-256 hash using:
 
 ```bash
 node scripts/hash-document.js sample_documents/property_001.json
 ```
 
-Change any field and run the command again. The SHA-256 value changes, demonstrating file-integrity detection. The Solidity contract stores a bytes32 hash for the on-chain proof rather than the full document.
+Changing even a small part of the document produces a different hash.
 
-## Folder Structure
+The project demonstrates the principle that:
+
+```text
+Original Document
+       ↓
+    SHA-256
+       ↓
+ Document Hash
+       ↓
+Stored on Blockchain
+```
+
+The complete document is **not stored directly on-chain**.
+
+---
+
+## 📂 Project Structure
+
 ```text
 Blockchain-Land-Registry-Property-Ownership/
-├── contracts/LandRegistry.sol
-├── scripts/deploy.js
-├── scripts/hash-document.js
-├── test/LandRegistry.test.js
+│
+├── contracts/
+│   └── LandRegistry.sol
+│
+├── scripts/
+│   ├── deploy.js
+│   └── hash-document.js
+│
+├── test/
+│   └── LandRegistry.test.js
+│
 ├── frontend/
-├── sample_documents/property_001.json
+│   └── ...
+│
+├── sample_documents/
+│   └── property_001.json
+│
 ├── hashes/
 ├── screenshots/
 ├── reports/
 ├── docs/
-├── README.md
+│
 ├── hardhat.config.js
 ├── package.json
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
-## Installation
+---
+
+## 🚀 Installation
+
+Clone the repository and install the dependencies:
+
 ```bash
+git clone https://github.com/YOUR_USERNAME/Blockchain-Land-Registry-Property-Ownership.git
+
+cd Blockchain-Land-Registry-Property-Ownership
+
 npm install
+```
+
+Compile the smart contract:
+
+```bash
 npm run compile
+```
+
+Run the test suite:
+
+```bash
 npm test
 ```
 
-## Local Deployment
-Terminal 1:
+---
+
+## ⛓️ Local Blockchain Deployment
+
+### Terminal 1 — Start Hardhat Network
+
 ```bash
 npm run node
 ```
 
-Terminal 2:
+This starts a local Ethereum-compatible blockchain.
+
+### Terminal 2 — Deploy the Contract
+
 ```bash
 npm run deploy:local
 ```
 
-The deploy script assigns test roles and registers synthetic property `P001`.
+The deployment script configures the test roles and registers the synthetic property `P001`.
 
-## Remix Simulation
-1. Open Remix IDE.
-2. Create `LandRegistry.sol` and paste `contracts/LandRegistry.sol`.
-3. Compile with Solidity 0.8.20.
-4. Select Remix VM.
-5. Deploy using Account 1 as admin.
-6. Use separate Remix accounts for registrar, verifier, owner, buyer and unauthorized user.
-7. Register property P001.
-8. Query `getProperty(1)`.
-9. Verify with the verifier account.
-10. Transfer from Owner A to Buyer B.
-11. Query the property again and inspect `OwnershipTransferred` logs.
-12. Attempt the same transfer from the old owner and confirm rejection.
+The deployed contract address should be copied into the frontend configuration.
 
-## Hardhat Tests
-The test suite covers deployment, role checks, registration, duplicate IDs, invalid owner/area, verification, unauthorized verification, transfer rules, old-owner rejection, zero-address rejection, history, owner listing, multi-step transfer and notary authorization.
+---
 
-Run:
-```bash
-npm test
-```
+## 🖥️ Frontend
 
-## Frontend
+Install frontend dependencies:
+
 ```bash
 cd frontend
 npm install
 ```
 
-Set `CONTRACT_ADDRESS` in `frontend/src/App.jsx` to the local deployed address, then:
+Configure the deployed contract address in:
+
+```text
+frontend/src/App.jsx
+```
+
+Then start the development server:
+
 ```bash
 npm run dev
 ```
 
-Connect MetaMask to the Hardhat local network. The UI provides wallet connection, property lookup, verification, ownership transfer, and ownership history.
+Connect MetaMask to the local Hardhat network.
 
-## Security Controls
-- Role-based access control.
-- Unique property IDs.
-- Zero-address checks.
-- Positive-area validation.
-- Required document hashes.
-- Verified-property requirement before transfer.
-- Current-owner authorization for simple transfer.
-- Notary authorization for multi-step completion.
-- Disputed-state blocking.
-- Events for auditable state changes.
-- No personal identity documents stored directly on-chain.
+The frontend supports:
 
-## Real-World Limitations
-- Wallet identity is not the same as legal identity.
-- Private-key compromise can compromise an account.
-- Incorrect source records remain incorrect even if immutable.
-- Legal disputes, inheritance, mortgages, liens and court orders require external governance.
-- Government/cadastral integration is required for a production registry.
-- Sensitive documents should be encrypted and stored off-chain; only hashes or content-addressed references should be anchored on-chain.
-- Production deployments require security audits, key-management procedures, privacy controls and legal review.
+* Wallet connection
+* Property lookup
+* Property verification
+* Ownership transfer
+* Ownership history
+* Blockchain transaction interaction
 
-## Suggested Screenshots
-Save evidence in `screenshots/` with names such as:
-- `01-folder-structure.png`
-- `02-solidity-contract.png`
-- `03-successful-compilation.png`
-- `04-contract-deployment.png`
-- `05-property-registration.png`
-- `06-property-details.png`
-- `07-unauthorized-rejected.png`
-- `08-property-verified.png`
-- `09-ownership-transfer.png`
-- `10-new-owner.png`
-- `11-old-owner-rejected.png`
-- `12-document-hash.png`
-- `13-hash-mismatch.png`
-- `14-ownership-events.png`
-- `15-hardhat-tests.png`
-- `16-frontend.png`
+---
 
-## GitHub Strategy
-Repository name: `Blockchain-Land-Registry-Property-Ownership`
+## 🦊 MetaMask Configuration
 
-Suggested topics: `blockchain`, `solidity`, `land-registry`, `real-estate`, `property`, `ethereum`, `smart-contract`, `web3`, `proptech`, `hardhat`, `ethersjs`, `dapp`.
+For local development, connect MetaMask to the Hardhat network.
 
-Suggested commits:
+Typical configuration:
+
 ```text
-Initialize blockchain land registry project
-Add property data model
-Implement authority-based property registration
-Add property verification workflow
-Implement secure ownership transfer
-Add property document hash verification
-Add ownership history events
-Add Hardhat tests
-Add Remix simulation proof
-Complete README and documentation
+Network Name: Hardhat Local
+RPC URL: http://127.0.0.1:8545
+Chain ID: 31337
+Currency Symbol: ETH
 ```
 
-## Git Commands
+> **Security:** Only use Hardhat's test accounts and private keys for local development. Never use real wallet credentials or seed phrases.
+
+---
+
+## 🧪 Hardhat Tests
+
+The automated test suite covers:
+
+* Contract deployment
+* Role assignment
+* Role-based authorization
+* Property registration
+* Duplicate property IDs
+* Invalid owner addresses
+* Invalid property areas
+* Property verification
+* Unauthorized verification
+* Ownership transfer
+* Old-owner rejection
+* Zero-address validation
+* Ownership history
+* Owner property listing
+* Multi-step transfers
+* Notary authorization
+
+Run the complete test suite:
+
 ```bash
-git init
-git add .
-git commit -m "Initialize blockchain land registry project"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/Blockchain-Land-Registry-Property-Ownership.git
-git push -u origin main
+npm test
 ```
 
-## Future Improvements
-- IPFS document storage with encrypted documents.
-- Registrar/surveyor/notary multi-signature approvals.
-- Encumbrance and mortgage management.
-- GIS/cadastral integration.
-- Decentralized identity.
-- Event indexing with The Graph or a custom read model.
-- Production key rotation and hardware-backed keys.
-- Permissioned EVM deployment for government/consortium environments.
+---
 
-## Learning Outcomes
-This project demonstrates Solidity structs, mappings, arrays, enums, modifiers, access control, `msg.sender`, events, transaction history, hashes, timestamps, local EVM testing, React/Ethers.js integration, and security-oriented smart-contract design.
+## 🧩 Remix Simulation
 
-## Author
-Student blockchain course project — synthetic data only.
-#   B l o c k c h a i n - L a n d - R e g i s t r y - P r o p e r t y - O w n e r s h i p  
- 
+The smart contract can also be tested using Remix IDE.
+
+1. Open Remix IDE.
+2. Create `LandRegistry.sol`.
+3. Copy the contract from `contracts/LandRegistry.sol`.
+4. Compile using Solidity `0.8.20`.
+5. Select **Remix VM**.
+6. Deploy using the admin account.
+7. Use separate accounts for the registrar, verifier, owner, buyer and unauthorized user.
+8. Register property `P001`.
+9. Query the property.
+10. Verify the property.
+11. Transfer ownership from Owner A to Buyer B.
+12. Query the property again.
+13. Inspect the `OwnershipTransferred` event.
+14. Attempt a transfer from the previous owner and verify that it is rejected.
+
+---
+
+## 🔒 Security Controls
+
+The smart contract includes several validation and authorization mechanisms:
+
+* Role-based access control
+* Unique property IDs
+* Zero-address validation
+* Positive-area validation
+* Required document hashes
+* Verified-property requirement before transfer
+* Current-owner authorization
+* Notary authorization for multi-step transfers
+* Disputed-property transfer blocking
+* Ownership history
+* Blockchain events for auditability
+* No personal identity documents stored directly on-chain
+
+---
+
+## ⚠️ Real-World Limitations
+
+This project is an educational prototype and should **not** be considered a production land-registry system.
+
+Real-world deployment would require:
+
+* Government or authorized registrar integration
+* Legal recognition of digital records
+* Identity verification
+* Cadastral/GIS integration
+* Dispute-resolution procedures
+* Inheritance handling
+* Mortgage and lien management
+* Privacy controls
+* Secure key management
+* Smart-contract security audits
+* Legal and regulatory compliance
+
+A blockchain does not automatically make input data correct.
+
+> **Garbage in, garbage out:** an immutable record of incorrect information is still incorrect.
+
+A wallet address also does not inherently represent a legally verified person's identity.
+
+---
+
+## 📸 Suggested Evidence
+
+Project screenshots can be stored in the `screenshots/` directory.
+
+Recommended evidence:
+
+```text
+01-folder-structure.png
+02-solidity-contract.png
+03-successful-compilation.png
+04-contract-deployment.png
+05-property-registration.png
+06-property-details.png
+07-unauthorized-rejected.png
+08-property-verified.png
+09-ownership-transfer.png
+10-new-owner.png
+11-old-owner-rejected.png
+12-document-hash.png
+13-hash-mismatch.png
+14-ownership-events.png
+15-hardhat-tests.png
+16-frontend.png
+```
+
+---
+
+## 💡 Industry Relevance
+
+The architecture demonstrated in this project can serve as a learning model for applications involving:
+
+* Land registries
+* Property management
+* Real-estate technology
+* Title verification
+* Document provenance
+* Due diligence
+* Housing societies
+* Mortgage and lien workflows
+
+A production implementation would require trusted authorities, verified identities, external databases, legal procedures and appropriate governance.
+
+---
+
+## 🔮 Future Improvements
+
+Potential extensions include:
+
+* IPFS-based document storage
+* Encrypted off-chain documents
+* Multi-signature authority approvals
+* Encumbrance and mortgage management
+* GIS/cadastral integration
+* Decentralized identity
+* Blockchain event indexing
+* The Graph or custom read models
+* Hardware-backed key management
+* Key rotation
+* Permissioned EVM deployment
+* Government/consortium integration
+* Advanced privacy mechanisms
+
+---
+
+## 📚 Learning Outcomes
+
+This project provides practical experience with:
+
+* Solidity smart contracts
+* Structs and mappings
+* Arrays and enums
+* Modifiers
+* Role-based access control
+* `msg.sender`
+* Smart-contract events
+* Blockchain transactions
+* Ownership tracking
+* Transaction timestamps
+* Cryptographic hashing
+* Hardhat development
+* Automated smart-contract testing
+* React and Ethers.js integration
+* MetaMask wallet interaction
+* Web3 application architecture
+* Security-oriented contract design
+
+---
+
+## 📝 GitHub Topics
+
+Recommended repository topics:
+
+```text
+blockchain
+solidity
+land-registry
+real-estate
+property
+ethereum
+smart-contract
+web3
+proptech
+hardhat
+ethersjs
+dapp
+react
+vite
+```
+
+---
+
+## 👨‍💻 Author
+
+**Student Blockchain Course Project**
+
+Built for educational purposes using synthetic property data and local/test blockchain accounts.
+
+> This project does not represent real government land records or legally valid property ownership.
