@@ -1,0 +1,10 @@
+{
+  "propertyId": 1,
+  "propertyNumber": "P001",
+  "surveyNumber": "SURVEY-DEMO-001",
+  "dummyOwner": "Owner A (test wallet)",
+  "location": "Coimbatore Demo Zone",
+  "area": 2400,
+  "propertyType": "Residential",
+  "purpose": "Synthetic data for educational blockchain demonstration only"
+}
